@@ -35,6 +35,10 @@ export function PersonTable() {
       setSelectedPerson(person);
     };
 
+    const handleAdd = () => {
+      setSelectedPerson({ id: null, name: "", age: "" }); 
+    };
+
     const handleCloseModal = () => {
       setSelectedPerson(null);
 
@@ -46,53 +50,59 @@ export function PersonTable() {
 
     return (
       <>
-       <Table sx={{ maxWidth: 600, margin: 'auto', mb: 4 }}>
-       <TableHead>
-                <TableRow>
-                    <TableCell>ID</TableCell>
-                    <TableCell>Имя</TableCell>
-                    <TableCell>Возраст</TableCell>
-                    <TableCell>Действия</TableCell> 
-                </TableRow>
-         </TableHead>
+      <Button
+        variant="contained"
+        color="success"
+        onClick={handleAdd}
+        sx={{ mb: 2 }}
+      >
+        Добавить человека
+      </Button>
+
+      <Table sx={{ maxWidth: 600, margin: "auto", mb: 4 }}>
+        <TableHead>
+          <TableRow>
+            <TableCell>ID</TableCell>
+            <TableCell>Имя</TableCell>
+            <TableCell>Возраст</TableCell>
+            <TableCell>Действия</TableCell>
+          </TableRow>
+        </TableHead>
         <TableBody>
-        {persons.map((person) => (
-                    <TableRow key={person.id}>
-                        <TableCell>{person.id}</TableCell>
-                        <TableCell>{person.name}</TableCell>
-                        <TableCell>{person.age}</TableCell>
-                        <TableCell>
-                        
-                            <Button
-                                variant="outlined"
-                                color="primary"
-                                size="small"
-                                onClick={() => handleEdit(person)}
-                                sx={{ mr: 1 }}
-                            >
-                                Редактировать
-                            </Button>
-                            <Button
-                                variant="outlined"
-                                color="error"
-                                size="small"
-                                onClick={() => onDelete(person.id)}
-                            >
-                                Удалить
-                            </Button>
-                        </TableCell>
-                      </TableRow>
-                       ))}
+          {persons.map((person) => (
+            <TableRow key={person.id}>
+              <TableCell>{person.id}</TableCell>
+              <TableCell>{person.name}</TableCell>
+              <TableCell>{person.age}</TableCell>
+              <TableCell>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  size="small"
+                  onClick={() => handleEdit(person)}
+                  sx={{ mr: 1 }}
+                >
+                  Редактировать
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  onClick={() => onDelete(person.id)}
+                >
+                  Удалить
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
         </TableBody>
       </Table>
-      
-     
+
       <PersonModal
-          person={selectedPerson}
-          onSave={handleCloseModal}
-          onClose={handleCloseModal}
+        person={selectedPerson}
+        onSave={handleCloseModal}
+        onClose={handleCloseModal}
       />
-             
-      </>
+    </>
       );
 }

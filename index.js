@@ -77,6 +77,14 @@ app.put('/persons/:id', async (req, res) => {
   try {
       const personId = parseInt(req.params.id);
       const { name, age } = req.body;
+
+      if (!name || !age) {
+        return res.status(400).json({ error: 'Имя и возраст обязательны' });
+      }
+
+      if (age <= 18) {
+        return res.status(400).json({ error: 'Возраст должен быть больше 18' });
+      }
       
       const query = `
           UPDATE persons

@@ -1,4 +1,3 @@
-
 import type { Person } from "./Table";
 import Button from '@mui/material/Button';
 import Modal from '@mui/material/Modal';
@@ -14,7 +13,7 @@ interface EditPersonModalProps {
 }
 
 const style = {
-    position: 'absolute',
+    position: 'absolute' as const,
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
@@ -25,7 +24,7 @@ const style = {
     p: 4,
 };
 
-export default function PersonTable({ person, onClose, onSave }: EditPersonModalProps) {
+export default function PersonModal({ person, onClose, onSave }: EditPersonModalProps) {
     const [formData, setFormData] = useState<Person>({
         id: 0,
         name: '',
@@ -33,27 +32,44 @@ export default function PersonTable({ person, onClose, onSave }: EditPersonModal
     });
 
     useEffect(() => {
-        if (person !== null && person !== undefined) {
+        if (person) {
             setFormData(person);
+        } else {
+            // Новый человек
+            setFormData({ id: 0, name: '', age: 0 });
         }
     }, [person]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        setFormData({ ...formData, [e.target.name]: e.target.name === "age" ? Number(e.target.value) : e.target.value });
     };
 
     const handleSave = async () => {
-        if (!person) return; // ← Защита от null
-
         try {
-            const response = await fetch(`http://localhost:8000/persons/${person.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            });
+            if (formData.id && formData.id !== 0) {
+                // Редактирование
+                const response = await fetch(`http://localhost:8000/persons/${formData.id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
 
-            if (response.ok) {
-                onSave();
+                if (response.ok) {
+                    onSave();
+                    onClose();
+                }
+            } else {
+                // Добавление нового человека
+                const response = await fetch("http://localhost:8000/persons", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    onSave();
+                    onClose();
+                }
             }
         } catch (error) {
             console.error('Ошибка при сохранении:', error);
@@ -64,7 +80,7 @@ export default function PersonTable({ person, onClose, onSave }: EditPersonModal
         <Modal open={!!person} onClose={onClose}>
             <Box sx={style}>
                 <Typography variant="h6" component="h2" sx={{ mb: 2 }}>
-                    Редактировать человека
+                    {formData.id && formData.id !== 0 ? "Редактировать человека" : "Добавить нового человека"}
                 </Typography>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
