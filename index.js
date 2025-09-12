@@ -23,7 +23,7 @@ app.listen(port, () => {
 app.get("/persons", async (req, res) => {
   const age = req.query.age;
   try {
-    const result = await pool.query('SELECT * FROM Persons');
+    const result = await pool.query('SELECT * FROM Persons WHERE age > 18');
     res.json(result.rows); 
   } catch (err) {
     res.status(500).json({ error: err.message });
