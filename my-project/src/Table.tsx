@@ -1,91 +1,103 @@
-import { useState, useEffect } from "react";
-import Modal from "@mui/material/Modal";
-import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
+import { useEffect, useState } from "react";
+import Table from '@mui/material/Table';
+import TableHead from '@mui/material/TableHead';
+import TableBody from '@mui/material/TableBody';
+import TableRow from '@mui/material/TableRow';
+import TableCell from '@mui/material/TableCell';
+import Button from '@mui/material/Button';
+import PersonModal from "./modal";
 
-const style = {
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  transform: "translate(-50%, -50%)",
-  width: 400,
-  bgcolor: "background.paper",
-  borderRadius: 2,
-  boxShadow: 24,
-  p: 4,
-};
 
-export default function PersonModal({ person, onSave, onClose }) {
-  const [formData, setFormData] = useState({ name: "", age: "" });
+export default function PersonTable() {
+    const [persons, setPersons] = useState([]);
+    const [selectedPerson, setSelectedPerson] = useState(null);
+         
+    useEffect(() => {
+        fetch("http://localhost:8000/persons")
+        .then((res) => res.json())
+        .then((data) => setPersons(data))
+        .catch((err) => console.error('Ошибка', err));
+    }, []);
 
-  useEffect(() => {
-    if (person) {
-      setFormData({
-        name: person.name || "",
-        age: person.age || "",
+    const onDelete = async (id: number) => {
+      await fetch(`http://localhost:8000/persons/${id}`, {
+        method: 'DELETE',
       });
-    }
-  }, [person]);
+      setPersons((prev) => prev.filter((person) => person.id !== id));
+    };
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+    const handleEdit = (person) => {
+      setSelectedPerson(person);
+    };
 
-  const handleSave = async () => {
-    if (person?.id) {
-      await fetch(`http://localhost:8000/persons/${person.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-    } else {
-      await fetch("http://localhost:8000/persons", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-    }
-    onSave();
-  };
+    const handleAdd = () => {
+      setSelectedPerson({ id: null, name: "", age: "" }); 
+    };
 
-  return (
-    <Modal open={!!person} onClose={onClose}>
-      <Box sx={style}>
-        <Typography variant="h6" sx={{ mb: 2 }}>
-          {person?.id ? "Редактировать человека" : "Добавить человека"}
-        </Typography>
+    const handleCloseModal = () => {
+      setSelectedPerson(null);
 
-        <TextField
-          label="Имя"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          fullWidth
-          size="small"
-          sx={{ mb: 2 }}
-        />
+      fetch("http://localhost:8000/persons")
+      .then((res) => res.json())
+      .then((data) => setPersons(data))
+      .catch((err) => console.error('Ошибка', err));
+    };
 
-        <TextField
-          label="Возраст"
-          name="age"
-          value={formData.age}
-          onChange={handleChange}
-          fullWidth
-          size="small"
-          sx={{ mb: 2 }}
-        />
+    return (
+      <>
+      <Button
+        variant="contained"
+        color="success"
+        onClick={handleAdd}
+        sx={{ mb: 2 }}
+      >
+        Добавить человека
+      </Button>
 
-        <Box sx={{ mt: 3, display: "flex", gap: 1, justifyContent: "flex-end" }}>
-          <Button variant="outlined" onClick={onClose}>
-            Отмена
-          </Button>
-          <Button variant="contained" onClick={handleSave}>
-            Сохранить
-          </Button>
-        </Box>
-      </Box>
-    </Modal>
-  );
+      <Table sx={{ maxWidth: 600, margin: "auto", mb: 4 }}>
+        <TableHead>
+          <TableRow>
+            <TableCell>ID</TableCell>
+            <TableCell>Имя</TableCell>
+            <TableCell>Возраст</TableCell>
+            <TableCell>Действия</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {persons.map((person) => (
+            <TableRow key={person.id}>
+              <TableCell>{person.id}</TableCell>
+              <TableCell>{person.name}</TableCell>
+              <TableCell>{person.age}</TableCell>
+              <TableCell>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  size="small"
+                  onClick={() => handleEdit(person)}
+                  sx={{ mr: 1 }}
+                >
+                  Редактировать
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="small"
+                  onClick={() => onDelete(person.id)}
+                >
+                  Удалить
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      <PersonModal
+        person={selectedPerson}
+        onSave={handleCloseModal}
+        onClose={handleCloseModal}
+      />
+    </>
+      );
 }
